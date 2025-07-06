@@ -144,7 +144,7 @@ st.markdown("""
 st.title("🌾 TaniAI - Asisten Petani Muda")
 st.markdown("""
     <div style="text-align: center; margin-bottom: 20px;">
-        <p>Tanya apa saja seputar pertanian kepada AI kami. Gratis! (Max 10 pertanyaan/hari)</p>
+        <p>Tanya apa saja seputar pertanian kepada AI kami</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -154,13 +154,6 @@ check_daily_reset()
 
 # Sidebar untuk informasi tambahan
 with st.sidebar:
-    st.header("📊 Info Penggunaan")
-    st.write(f"Percakapan hari ini: {st.session_state.conversation_count}/10")
-    
-    # Visualisasi penggunaan
-    usage_percent = (st.session_state.conversation_count / 10) * 100
-    st.progress(int(usage_percent))
-    
     # Tips harian
     if not st.session_state.tips_shown:
         today_tip = tips_pertanian[datetime.now().day % len(tips_pertanian)]
@@ -195,17 +188,9 @@ with st.form("form_chat"):
         key="user_input",
         label_visibility="collapsed"
     )
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        submitted = st.form_submit_button("Kirim Pertanyaan")
-    with col2:
-        clear_input = st.form_submit_button("🧹 Bersihkan")
+    submitted = st.form_submit_button("Kirim Pertanyaan")
 
 # Proses input pengguna
-if clear_input:
-    st.session_state.user_input = ""
-    st.rerun()
-
 if submitted and user_input:
     check_daily_reset()  # Periksa reset harian
     
@@ -214,11 +199,6 @@ if submitted and user_input:
         st.warning("Maaf, TaniAI hanya bisa membahas topik pertanian. Silakan ajukan pertanyaan tentang tanaman, pupuk, atau masalah pertanian lainnya.")
         st.session_state.chat_history.append(("user", user_input))
         st.session_state.chat_history.append(("ai", "Saya hanya bisa membantu dengan masalah pertanian. Ada yang bisa saya bantu seputar bercocok tanam?"))
-    elif st.session_state.conversation_count >= 10:
-        st.warning("""
-            ⚠️ Anda telah mencapai batas 10 percakapan hari ini. 
-            Silakan kembali besok untuk bertanya lagi atau eksplor tips harian di sidebar.
-        """)
     else:
         with st.spinner("🔍 Mencari solusi terbaik untuk masalah Anda..."):
             try:
@@ -231,9 +211,6 @@ if submitted and user_input:
                 
                 # Tambahkan respon ke riwayat
                 st.session_state.chat_history.append(("ai", ai_response))
-                
-                # Update counter
-                st.session_state.conversation_count += 1
                 
             except Exception as e:
                 st.error(f"❌ Terjadi kesalahan: {e}")
@@ -262,7 +239,6 @@ if st.session_state.chat_history:
 st.markdown("---")
 st.markdown("""
     <div style="text-align: center; color: #7f8c8d;">
-        <p>© 2023 TaniAI - Asisten Virtual Pertanian | Versi 2.0</p>
-        <p>Untuk pertanyaan lebih lanjut, hubungi: support@taniai.id</p>
+        <p>Dikembangkan oleh Romi | <a href="https://romifullstack.vercel.app" target="_blank">romifullstack.vercel.app</a></p>
     </div>
 """, unsafe_allow_html=True)
