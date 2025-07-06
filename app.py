@@ -5,7 +5,7 @@ import google.generativeai as genai
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # Inisialisasi model dan chat dengan konteks asisten pertanian
-model = genai.GenerativeModel("models/gemini-1.5-pro")
+model = genai.GenerativeModel("models/gemini-1.5-flash")
 chat = model.start_chat(history=[
     {"role": "user", "parts": ["Kamu adalah asisten virtual pertanian yang membantu petani muda menjawab pertanyaan tentang tanaman, cuaca, pupuk, bibit, dan teknik cocok tanam. Jawablah dengan bahasa yang mudah dimengerti dan ramah."]}
 ])
