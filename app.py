@@ -589,6 +589,7 @@ def main():
         cursor.execute(
             "SELECT timestamp, user_input, ai_response FROM conversations WHERE user_id = ? ORDER BY timestamp DESC",
             (state.user_id,)
+        )
         history = cursor.fetchall()
         
         if history:
