@@ -1,7 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
 from datetime import datetime
-import time
 
 # Konfigurasi API Key
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -17,12 +16,7 @@ tips_pertanian = [
     "📅 Buat jadwal rutin pemupukan setiap 2-4 minggu sekali",
     "✂️ Pangkas daun/tunas yang layu untuk stimulasi pertumbuhan baru",
     "🌧️ Manfaatkan air hujan dengan membuat penampungan sederhana",
-    "🔍 Periksa daun secara rutin untuk deteksi dini hama penyakit",
-    "🌿 Campur tanaman sayuran dengan rempah untuk sistem polyculture",
-    "🕊️ Gunakan mulsa jerami untuk menjaga kelembaban tanah",
-    "🧂 Gunakan air garam encer untuk mengendalikan gulma di sela paving",
-    "🍌 Kulit pisang kaya kalium, bisa dijadikan pupuk cair",
-    "☕ Ampas kopi baik untuk tanaman yang suka tanah asam seperti tomat"
+    "🔍 Periksa daun secara rutin untuk deteksi dini hama penyakit"
 ]
 
 # Inisialisasi model dengan contoh percakapan
@@ -42,55 +36,14 @@ chat = model.start_chat(history=[
 - Pengolahan hasil panen
 
 Ada yang bisa saya bantu hari ini?"""]
-    },
-    {
-        "role": "user", 
-        "parts": ["Bagaimana menanam cabai rawit di pot?"]
-    },
-    {
-        "role": "model", 
-        "parts": ["""Berikut panduan lengkap menanam cabai rawit di pot:
-
-1. **Pilih Pot**: Minimal diameter 30cm dengan lubang drainase
-2. **Media Tanam**: Campur tanah, kompos, sekam bakar (2:1:1)
-3. **Bibit**: Rendam benih dalam air hangat 2 jam sebelum semai
-4. **Penanaman**: Pindahkan bibit setelah punya 4-5 daun sejati
-5. **Perawatan**:
-   - Siram 1x sehari (jangan sampai tergenang)
-   - Beri pupuk NPK 2 minggu sekali
-   - Jemur minimal 6 jam/hari
-6. **Panen**: Mulai usia 2,5-3 bulan setelah tanam
-
-Tips: Gunakan ajir bambu untuk menyangga tanaman!"""]
-    },
-    {
-        "role": "user",
-        "parts": ["Apa game pertanian yang seru?"]
-    },
-    {
-        "role": "model",
-        "parts": ["Maaf, saya hanya bisa membahas tentang dunia pertanian nyata. Mungkin Anda ingin tahu tentang permainan edukasi pertanian untuk anak-anak? Atau saya bisa bantu dengan teknik bertanam yang menyenangkan?"]
     }
 ])
 
-# Fungsi untuk manajemen session state
+# Fungsi untuk session state
 def init_session_state():
-    if 'conversation_count' not in st.session_state:
-        st.session_state.conversation_count = 0
-    if 'last_reset' not in st.session_state:
-        st.session_state.last_reset = datetime.now().date()
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     if 'tips_shown' not in st.session_state:
-        st.session_state.tips_shown = False
-
-# Reset counter harian
-def check_daily_reset():
-    today = datetime.now().date()
-    if st.session_state.last_reset != today:
-        st.session_state.conversation_count = 0
-        st.session_state.last_reset = today
-        st.session_state.chat_history = []
         st.session_state.tips_shown = False
 
 # Tampilan Web
@@ -114,9 +67,6 @@ st.markdown("""
             font-weight: bold;
             padding: 10px 20px;
         }
-        .stAlert {
-            border-radius: 10px;
-        }
         .chat-box {
             background-color: #f9f9f9;
             border-radius: 15px;
@@ -134,9 +84,6 @@ st.markdown("""
             color: #16a085;
             margin-right: 20%;
         }
-        .reset-btn {
-            background-color: #f44336 !important;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -150,11 +97,9 @@ st.markdown("""
 
 # Inisialisasi session state
 init_session_state()
-check_daily_reset()
 
-# Sidebar untuk informasi tambahan
+# Sidebar untuk tips harian
 with st.sidebar:
-    # Tips harian
     if not st.session_state.tips_shown:
         today_tip = tips_pertanian[datetime.now().day % len(tips_pertanian)]
         st.info(f"🌱 Tips Hari Ini:\n\n{today_tip}")
@@ -166,19 +111,10 @@ with st.sidebar:
             <ul>
                 <li>Bagaimana mengatasi hama wereng pada padi?</li>
                 <li>Pupuk apa yang cocok untuk tanaman cabai?</li>
-                <li>Prediksi cuaca untuk tanam jagung minggu depan</li>
                 <li>Cara membuat pupuk kompos dari limbah dapur</li>
             </ul>
         </div>
     """, unsafe_allow_html=True)
-    
-    # Tombol reset percakapan
-    if st.button("🔄 Reset Percakapan", key="reset_chat", help="Mulai percakapan baru"):
-        st.session_state.chat_history = []
-        st.rerun()
-
-# Filter pertanyaan tidak relevan
-toxic_keywords = ["game", "film", "musik", "selebriti", "politik", "hiburan", "olahraga"]
 
 # Form input pengguna
 with st.form("form_chat"):
@@ -192,29 +128,21 @@ with st.form("form_chat"):
 
 # Proses input pengguna
 if submitted and user_input:
-    check_daily_reset()  # Periksa reset harian
-    
-    # Cek pertanyaan tidak relevan
-    if any(keyword in user_input.lower() for keyword in toxic_keywords):
-        st.warning("Maaf, TaniAI hanya bisa membahas topik pertanian. Silakan ajukan pertanyaan tentang tanaman, pupuk, atau masalah pertanian lainnya.")
-        st.session_state.chat_history.append(("user", user_input))
-        st.session_state.chat_history.append(("ai", "Saya hanya bisa membantu dengan masalah pertanian. Ada yang bisa saya bantu seputar bercocok tanam?"))
-    else:
-        with st.spinner("🔍 Mencari solusi terbaik untuk masalah Anda..."):
-            try:
-                # Tambahkan ke riwayat percakapan
-                st.session_state.chat_history.append(("user", user_input))
-                
-                # Kirim ke model AI
-                response = chat.send_message(user_input)
-                ai_response = response.text
-                
-                # Tambahkan respon ke riwayat
-                st.session_state.chat_history.append(("ai", ai_response))
-                
-            except Exception as e:
-                st.error(f"❌ Terjadi kesalahan: {e}")
-                st.session_state.chat_history.append(("error", str(e)))
+    with st.spinner("🔍 Mencari solusi terbaik untuk masalah Anda..."):
+        try:
+            # Tambahkan ke riwayat percakapan
+            st.session_state.chat_history.append(("user", user_input))
+            
+            # Kirim ke model AI
+            response = chat.send_message(user_input)
+            ai_response = response.text
+            
+            # Tambahkan respon ke riwayat
+            st.session_state.chat_history.append(("ai", ai_response))
+            
+        except Exception as e:
+            st.error(f"❌ Terjadi kesalahan: {e}")
+            st.session_state.chat_history.append(("error", str(e)))
 
 # Tampilkan riwayat percakapan
 if st.session_state.chat_history:
@@ -235,10 +163,10 @@ if st.session_state.chat_history:
         else:  # error
             st.error(f"Error: {message}")
 
-# Fitur tambahan di footer
+# Footer
 st.markdown("---")
 st.markdown("""
     <div style="text-align: center; color: #7f8c8d;">
-        <p>Dikembangkan oleh Romi | <a href="https://romifullstack.vercel.app" target="_blank">romifullstack.vercel.app</a></p>
+        <p>© 2025 TaniAI | Dikembangkan oleh <a href="https://romifullstack.vercel.app" target="_blank">Romi</a></p>
     </div>
 """, unsafe_allow_html=True)
