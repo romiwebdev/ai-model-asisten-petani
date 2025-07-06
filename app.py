@@ -12,46 +12,15 @@ model = genai.GenerativeModel("models/gemini-1.5-flash")
 chat = model.start_chat(history=[
     {
         "role": "user", 
-        "parts": ["Kamu adalah TaniAI - Asisten Virtual Pertanian yang ramah dan berpengalaman."]
+        "parts": ["Kamu adalah TaniAI - Asisten Virtual Pertanian profesional."]
     },
     {
         "role": "model",
-        "parts": ["Halo! Saya TaniAI, siap membantu masalah pertanian Anda. Apa yang bisa saya bantu hari ini?"]
-    },
-    {
-        "role": "user",
-        "parts": ["Bagaimana menanam cabai rawit di pot?"]
-    },
-    {
-        "role": "model",
-        "parts": [
-            "Untuk menanam cabai rawit di pot:\n\n"
-            "1. Gunakan pot berdiameter minimal 30cm dengan lubang drainase\n"
-            "2. Media tanam: campuran tanah, kompos, dan sekam (2:1:1)\n"
-            "3. Pilih bibit unggul, tanam dengan jarak 25-30cm\n"
-            "4. Siram 1-2x sehari, jangan sampai tergenang\n"
-            "5. Beri pupuk organik seminggu sekali setelah 2 minggu tanam\n\n"
-            "Tips: Letakkan di tempat terkena sinar matahari 6-8 jam/hari"
-        ]
-    },
-    {
-        "role": "user",
-        "parts": ["Apa saja hama utama pada tanaman padi?"]
-    },
-    {
-        "role": "model",
-        "parts": [
-            "Hama utama padi dan penanganannya:\n\n"
-            "1. Wereng - Gunakan pestisida alami (bawang putih + cabai) atau predator alami\n"
-            "2. Penggerek batang - Rotasi tanaman dan sanitasi sawah\n"
-            "3. Walang sangit - Tanam varietas tahan atau gunakan perangkap feromon\n"
-            "4. Tikus - Pasang perangkap atau jaring pelindung\n\n"
-            "Pencegahan terbaik adalah dengan sistem tanam sehat dan pengamatan rutin!"
-        ]
+        "parts": ["Halo! Saya TaniAI, siap membantu masalah pertanian Anda dengan solusi praktis."]
     }
 ])
 
-# Fungsi untuk manajemen session state
+# ========== FUNGSI UTILITAS ==========
 def init_session_state():
     if 'conversation_count' not in st.session_state:
         st.session_state.conversation_count = 0
@@ -62,7 +31,6 @@ def init_session_state():
     if 'tips_shown' not in st.session_state:
         st.session_state.tips_shown = False
 
-# Reset counter harian
 def check_daily_reset():
     today = datetime.now().date()
     if st.session_state.last_reset != today:
@@ -71,254 +39,305 @@ def check_daily_reset():
         st.session_state.chat_history = []
         st.session_state.tips_shown = False
 
-# Tips pertanian harian
 def show_daily_tip():
     tips = [
-        "💧 Siram tanaman pagi hari sebelum jam 9 untuk mengurangi penguapan",
+        "💧 Siram pagi hari sebelum jam 9 untuk efisiensi air",
         "🌱 Rotasi tanaman setiap musim untuk menjaga kesuburan tanah",
-        "🪲 Gunakan pestisida alami dari bawang putih dan cabai untuk hama kecil",
-        "🌞 Pastikan tanaman mendapat sinar matahari cukup sesuai kebutuhannya",
-        "🍂 Daun kering bisa dijadikan kompos alami",
-        "🌼 Tanam bunga refugia di pinggir sawah untuk mengundang predator alami hama",
-        "🧂 Campurkan sedikit garam pada pupuk cair untuk tanaman yang kekurangan mineral",
-        "🕷️ Biarkan laba-laba di kebun, mereka membantu mengendalikan hama",
-        "🌦️ Periksa prakiraan cuaca sebelum memutuskan waktu tanam atau panen",
-        "✂️ Pangkas daun yang layu atau sakit untuk mencegah penyebaran penyakit"
+        "🪲 Gunakan pestisida alami dari bawang putih + cabai",
+        "🌞 Sesuaikan jarak tanam dengan kebutuhan sinar matahari",
+        "🍂 Daun kering bisa jadi kompos alami",
+        "🌼 Tanam bunga refugia untuk undang predator alami hama",
+        "🧂 Tambahkan sedikit garam pada pupuk cair untuk tanaman kurang mineral",
+        "🕷️ Biarkan laba-laba di kebun - mereka pengendali hama alami",
+        "🌦️ Periksa prakiraan cuaca sebelum tanam/panen",
+        "✂️ Pangkas daun layu untuk cegah penyebaran penyakit"
     ]
-    today_tip = tips[datetime.now().day % len(tips)]
-    st.session_state.today_tip = today_tip
+    st.session_state.today_tip = random.choice(tips)
     st.session_state.tips_shown = True
 
-# Filter pertanyaan tidak relevan
 def is_relevant_question(question):
-    irrelevant_keywords = [
-        'game', 'film', 'musik', 'hiburan', 'olahraga', 'politik',
-        'selebriti', 'kpop', 'sinetron', 'resep masakan', 'kesehatan umum',
-        'teknologi', 'gadget', 'otomotif', 'fashion', 'kecantikan'
-    ]
-    agricultural_keywords = [
-        'tanam', 'pupuk', 'bibit', 'hama', 'penyakit', 'panen',
-        'padi', 'jagung', 'cabai', 'sawi', 'kangkung', 'pertanian',
-        'sawah', 'ladang', 'kebun', 'irigasi', 'kompos', 'organik'
-    ]
-    
-    question_lower = question.lower()
-    
-    # Jika mengandung kata kunci pertanian, dianggap relevan
-    if any(keyword in question_lower for keyword in agricultural_keywords):
-        return True
-    
-    # Jika mengandung kata kunci tidak relevan, dianggap tidak relevan
-    if any(keyword in question_lower for keyword in irrelevant_keywords):
-        return False
-    
-    # Default: relevan
-    return True
+    irrelevant_keywords = ['game', 'film', 'musik', 'hiburan', 'politik']
+    agricultural_keywords = ['tanam', 'pupuk', 'bibit', 'hama', 'panen', 'pertanian']
+    return any(kw in question.lower() for kw in agricultural_keywords)
 
-# Tampilan Web
+# ========== TAMPILAN UI ==========
 st.set_page_config(
-    page_title="TaniAI - Asisten Petani Muda", 
-    page_icon="🌱",
-    layout="centered"
+    page_title="TaniAI Pro - Asisten Petani Modern",
+    page_icon="🌾",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS
-st.markdown("""
+# CSS Custom
+st.markdown(f"""
     <style>
-        .stTextInput input {
-            border-radius: 20px;
-            padding: 10px 15px;
-        }
-        .stButton button {
-            border-radius: 20px;
-            background-color: #4CAF50;
+        /* Font dan Warna Dasar */
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            background-color: #f8f9fa;
+        }}
+        
+        /* Header */
+        .header {{
+            background: linear-gradient(135deg, #2e7d32, #388e3c);
             color: white;
-            font-weight: bold;
-            margin: 5px;
-        }
-        .quick-btn {
-            border-radius: 15px;
-            padding: 8px 12px;
-            margin: 5px;
-            font-size: 14px;
-            background-color: #e8f5e9;
-            border: 1px solid #c8e6c9;
-        }
-        .stAlert {
-            border-radius: 10px;
-        }
-        .chat-box {
-            background-color: #f9f9f9;
-            border-radius: 15px;
-            padding: 15px;
-            margin: 10px 0;
-        }
-        .user-message {
-            text-align: right;
-            color: #2c3e50;
-        }
-        .ai-message {
-            text-align: left;
-            color: #16a085;
-        }
-        .tip-box {
+            padding: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }}
+        
+        /* Tombol Utama */
+        .stButton>button {{
+            border-radius: 25px;
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            transition: all 0.3s;
+        }}
+        .stButton>button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }}
+        
+        /* Tombol Topik Cepat */
+        .quick-btn {{
+            border-radius: 20px;
+            padding: 0.7rem 1rem;
+            margin: 0.3rem;
+            font-size: 0.9rem;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border: none;
+            color: #1b5e20;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 100%;
+            text-align: center;
+        }}
+        .quick-btn:hover {{
+            background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+            transform: translateY(-2px);
+        }}
+        
+        /* Chat Box */
+        .chat-box {{
+            border-radius: 18px;
+            padding: 1.2rem 1.5rem;
+            margin: 0.8rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-width: 85%;
+            word-wrap: break-word;
+        }}
+        .user-message {{
             background-color: #e3f2fd;
-            border-left: 5px solid #2196f3;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 0 10px 10px 0;
-        }
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }}
+        .ai-message {{
+            background-color: #f1f8e9;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }}
+        
+        /* Sidebar */
+        .sidebar .sidebar-content {{
+            background-color: #f5f5f6;
+            padding: 1.5rem;
+        }}
+        .usage-card {{
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }}
+        
+        /* Responsif */
+        @media (max-width: 768px) {{
+            .header h1 {{ font-size: 1.8rem; }}
+            .quick-btn {{ font-size: 0.8rem; padding: 0.6rem; }}
+            .chat-box {{ max-width: 95%; }}
+        }}
     </style>
 """, unsafe_allow_html=True)
 
-# Header aplikasi
-st.title("🌾 TaniAI - Asisten Petani Muda")
+# ========== HEADER ==========
 st.markdown("""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <p>Tanya apa saja seputar pertanian kepada AI kami. Gratis! (Max 10 pertanyaan/hari)</p>
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h1 style="margin: 0; font-weight: 700;">🌱 TaniAI Pro</h1>
+            <div style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 0.9rem;">
+                Asisten Pertanian Modern
+            </div>
+        </div>
+        <p style="margin: 0.5rem 0 0; opacity: 0.9;">Dapatkan solusi cerdas untuk masalah pertanian Anda</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Inisialisasi session state
-init_session_state()
-check_daily_reset()
-
-# Sidebar untuk informasi tambahan
+# ========== SIDEBAR ==========
 with st.sidebar:
-    st.header("📊 Info Penggunaan")
-    st.write(f"Percakapan hari ini: {st.session_state.conversation_count}/10")
+    st.markdown("""
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <h3 style="color: #2e7d32; border-bottom: 2px solid #81c784; padding-bottom: 0.5rem;">Dashboard</h3>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Visualisasi penggunaan
-    usage_percent = (st.session_state.conversation_count / 10) * 100
-    st.progress(int(usage_percent))
+    # Kartu Penggunaan
+    st.markdown("""
+        <div class="usage-card">
+            <h4 style="margin-top: 0; color: #388e3c;">📊 Penggunaan Harian</h4>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Percakapan:</span>
+                <span style="font-weight: 600;">{}/10</span>
+            </div>
+            <div style="height: 10px; background: #e0e0e0; border-radius: 5px; margin-bottom: 1rem;">
+                <div style="height: 100%; width: {}%; background: linear-gradient(90deg, #81c784, #4caf50); border-radius: 5px;"></div>
+            </div>
+            <button onclick="window.location.reload()" style="width: 100%; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.3s;">
+                🔄 Reset Percakapan
+            </button>
+        </div>
+    """.format(
+        st.session_state.get('conversation_count', 0),
+        (st.session_state.get('conversation_count', 0) / 10) * 100
+    ), unsafe_allow_html=True)
     
-    # Tombol reset percakapan
-    if st.button("🔄 Mulai Percakapan Baru", use_container_width=True):
-        st.session_state.chat_history = []
-        st.rerun()
-    
-    # Tips harian
+    # Tips Harian
     if not st.session_state.tips_shown:
         show_daily_tip()
     
     st.markdown(f"""
-        <div class="tip-box">
-            <h4>🌱 Tips Hari Ini:</h4>
-            <p>{st.session_state.today_tip if 'today_tip' in st.session_state else 'Loading tips...'}</p>
+        <div style="background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+            <h4 style="margin-top: 0; color: #388e3c;">🌿 Tips Hari Ini</h4>
+            <div style="background: #e8f5e9; padding: 0.8rem; border-radius: 8px; border-left: 4px solid #4caf50;">
+                {st.session_state.today_tip if 'today_tip' in st.session_state else 'Memuat tips...'}
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
+    # Contoh Pertanyaan
     st.markdown("""
-        <div style="margin-top: 30px;">
-            <h4>💡 Contoh Pertanyaan:</h4>
-            <ul>
-                <li>Bagaimana mengatasi hama wereng pada padi?</li>
-                <li>Pupuk apa yang cocok untuk tanaman cabai?</li>
-                <li>Prediksi cuaca untuk tanam jagung minggu depan</li>
-                <li>Cara membuat pupuk kompos dari limbah dapur</li>
+        <div style="background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <h4 style="margin-top: 0; color: #388e3c;">💡 Contoh Pertanyaan</h4>
+            <ul style="padding-left: 1.2rem; margin-bottom: 0;">
+                <li style="margin-bottom: 0.5rem;">Bagaimana mengatasi hama wereng?</li>
+                <li style="margin-bottom: 0.5rem;">Pupuk terbaik untuk cabai?</li>
+                <li style="margin-bottom: 0.5rem;">Cara membuat kompos cepat</li>
+                <li>Teknik tanam hidroponik sederhana</li>
             </ul>
         </div>
     """, unsafe_allow_html=True)
 
-# Quick buttons untuk topik cepat
-st.markdown("### 📚 Topik Populer:")
+# ========== KONTEN UTAMA ==========
+init_session_state()
+check_daily_reset()
+
+# Section Topik Cepat
+st.markdown("""
+    <div style="margin: 1.5rem 0;">
+        <h3 style="color: #2e7d32; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.2em;">🧭</span> Topik Cepat
+        </h3>
+        <p style="margin-top: -0.5rem; color: #666; font-size: 0.95rem;">Pilih topik untuk memulai percakapan</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Grid Tombol Topik Cepat
 col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("🐛 Hama & Penyakit", help="Tanya tentang identifikasi dan penanganan hama"):
-        st.session_state.user_input = "Apa saja hama utama pada tanaman padi dan cara mengatasinya secara organik?"
+    if st.button("🐛 Hama & Penyakit", key="hama_btn", help="Identifikasi dan atasi masalah hama"):
+        st.session_state.user_input = "Bagaimana mengidentifikasi dan mengatasi hama wereng pada padi secara organik?"
 with col2:
-    if st.button("🌿 Pupuk Organik", help="Tanya tentang pembuatan dan penggunaan pupuk alami"):
-        st.session_state.user_input = "Bagaimana cara membuat pupuk organik dari bahan-bahan di sekitar rumah?"
+    if st.button("🌿 Pupuk Organik", key="pupuk_btn", help="Pembuatan dan penggunaan pupuk alami"):
+        st.session_state.user_input = "Apa saja bahan rumah tangga yang bisa dijadikan pupuk organik dan cara pembuatannya?"
 with col3:
-    if st.button("🌦️ Cuaca & Tanam", help="Tanya tentang hubungan cuaca dengan waktu tanam"):
-        st.session_state.user_input = "Bagaimana memprediksi waktu tanam yang tepat berdasarkan musim?"
+    if st.button("🌦️ Cuaca & Tanam", key="cuaca_btn", help="Panduan tanam berdasarkan musim"):
+        st.session_state.user_input = "Bagaimana memprediksi waktu tanam yang ideal berdasarkan pola cuaca saat ini?"
 
 col4, col5, col6 = st.columns(3)
 with col4:
-    if st.button("🪴 Tanaman Pot", help="Tanya tentang urban farming dengan media pot"):
-        st.session_state.user_input = "Apa saja sayuran yang cocok ditanam di pot kecil di apartemen?"
+    if st.button("🪴 Urban Farming", key="urban_btn", help="Pertanian di lahan terbatas"):
+        st.session_state.user_input = "Teknik urban farming apa yang efektif untuk pemula di apartemen?"
 with col5:
-    if st.button("💧 Irigasi", help="Tanya tentang sistem pengairan yang efisien"):
-        st.session_state.user_input = "Apa sistem irigasi yang paling hemat air untuk lahan kecil?"
+    if st.button("💧 Irigasi Pintar", key="irigasi_btn", help="Sistem pengairan efisien"):
+        st.session_state.user_input = "Sistem irigasi apa yang paling hemat air untuk kebun kecil?"
 with col6:
-    if st.button("🔄 Rotasi Tanaman", help="Tanya tentang pengaturan gilir tanam"):
+    if st.button("🔄 Rotasi Tanaman", key="rotasi_btn", help="Pengaturan gilir tanam"):
         st.session_state.user_input = "Bagaimana pola rotasi tanaman yang baik untuk lahan terbatas?"
 
-# Form input pengguna
-with st.form("form_chat"):
+# Form Input Pengguna
+with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input(
-        "🧑 Petani:", 
+        "Tanyakan masalah pertanian Anda:",
         value=st.session_state.get("user_input", ""),
-        placeholder="Tulis pertanyaan pertanian Anda di sini...",
-        key="user_input_field",
+        placeholder="Contoh: Cara mengatasi daun menguning pada tanaman tomat...",
+        key="input_field",
         label_visibility="collapsed"
     )
-    submitted = st.form_submit_button("Kirim Pertanyaan")
+    
+    submit_col1, submit_col2, submit_col3 = st.columns([1,6,1])
+    with submit_col2:
+        submitted = st.form_submit_button("Kirim Pertanyaan", use_container_width=True)
 
-# Proses input pengguna
+# Proses Input
 if submitted and user_input:
-    check_daily_reset()  # Periksa reset harian
+    check_daily_reset()
     
     if st.session_state.conversation_count >= 10:
         st.warning("""
             ⚠️ Anda telah mencapai batas 10 percakapan hari ini. 
-            Silakan kembali besok untuk bertanya lagi atau gunakan fitur yang tersedia di sidebar.
+            Silakan kembali besok untuk bertanya lagi.
         """)
     else:
-        # Cek relevansi pertanyaan
         if not is_relevant_question(user_input):
             st.warning("""
                 Mohon maaf, TaniAI hanya bisa membantu pertanyaan seputar pertanian. 
                 Silakan ajukan pertanyaan tentang tanaman, pupuk, hama, atau topik pertanian lainnya.
             """)
         else:
-            with st.spinner("🔍 Mencari solusi terbaik untuk masalah Anda..."):
+            with st.spinner("🔍 Menganalisis pertanyaan Anda..."):
                 try:
-                    # Tambahkan ke riwayat percakapan
                     st.session_state.chat_history.append(("user", user_input))
-                    
-                    # Kirim ke model AI
                     response = chat.send_message(user_input)
                     ai_response = response.text
-                    
-                    # Tambahkan respon ke riwayat
                     st.session_state.chat_history.append(("ai", ai_response))
-                    
-                    # Update counter
                     st.session_state.conversation_count += 1
-                    
                 except Exception as e:
-                    st.error(f"❌ Terjadi kesalahan: {e}")
-                    st.session_state.chat_history.append(("error", str(e)))
-    
-    # Clear input setelah submit
-    st.session_state.user_input = ""
-    st.rerun()
+                    st.error(f"❌ Terjadi kesalahan: {str(e)}")
 
-# Tampilkan riwayat percakapan
+# Tampilkan Riwayat Chat
 if st.session_state.chat_history:
-    st.markdown("## 📜 Riwayat Percakapan")
+    st.markdown("""
+        <div style="margin: 2rem 0 1rem;">
+            <h3 style="color: #2e7d32; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2em;">📜</span> Riwayat Percakapan
+            </h3>
+        </div>
+    """, unsafe_allow_html=True)
+    
     for role, message in st.session_state.chat_history:
         if role == "user":
             st.markdown(f"""
                 <div class="chat-box user-message">
-                    <strong>Anda:</strong><br>{message}
+                    <div style="font-weight: 600; color: #0d47a1; margin-bottom: 5px;">Anda:</div>
+                    <div>{message}</div>
                 </div>
             """, unsafe_allow_html=True)
         elif role == "ai":
             st.markdown(f"""
                 <div class="chat-box ai-message">
-                    <strong>TaniAI:</strong><br>{message}
+                    <div style="font-weight: 600; color: #1b5e20; margin-bottom: 5px;">TaniAI:</div>
+                    <div>{message}</div>
                 </div>
             """, unsafe_allow_html=True)
-        else:  # error
-            st.error(f"Error: {message}")
 
-# Fitur tambahan di footer
-st.markdown("---")
+# Footer
 st.markdown("""
-    <div style="text-align: center; color: #7f8c8d;">
-        <p>© 2023 TaniAI - Asisten Virtual Pertanian | Versi 2.0</p>
-        <p>Untuk pertanyaan lebih lanjut, hubungi: support@taniai.id</p>
+    <div style="margin-top: 3rem; padding: 1.5rem; text-align: center; color: #666; font-size: 0.9rem; border-top: 1px solid #eee;">
+        <p>© 2023 TaniAI Pro - Asisten Pertanian Cerdas | Versi 2.1</p>
+        <p style="margin-top: 0.5rem;">Dikembangkan dengan ❤️ untuk petani Indonesia</p>
     </div>
 """, unsafe_allow_html=True)
