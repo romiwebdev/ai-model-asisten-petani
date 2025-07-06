@@ -276,8 +276,8 @@ class SessionState:
 def get_user_id():
     """Generate unique user ID based on browser and IP"""
     try:
-        user_agent = st.experimental_get_query_params().get("user_agent", [""])[0]
-        ip_address = st.experimental_get_query_params().get("ip", ["anonymous"])[0]
+        user_agent = st.query_params.get("user_agent", [""])[0]
+        ip_address = st.query_params.get("ip", ["anonymous"])[0]
         return hashlib.md5(f"{user_agent}{ip_address}".encode()).hexdigest()
     except:
         return "default_user"
