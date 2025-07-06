@@ -19,7 +19,7 @@ import os
 
 # Konfigurasi API
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-MODEL_NAME = "models/gemini-1.5-pro-latest"
+MODEL_NAME = "models/gemini-1.5-flash"
 
 # Konfigurasi Basis Data
 DB_NAME = "taniai_database.db"
