@@ -166,6 +166,7 @@ class DatabaseManager:
             cursor.execute(
                 "UPDATE usage_limits SET daily_count = 1, last_reset = ?, total_usage = total_usage + 1 WHERE user_id = ?",
                 (today, user_id)
+            )
         else:
             # Tambah penggunaan
             cursor = self.conn.cursor()
