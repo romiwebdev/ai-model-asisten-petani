@@ -36,3 +36,7 @@ https://asisten-petani.streamlit.app
 ---
 
 This educational project is suitable for vocational school students, agriculture students, or digital farmer communities. Made with ❤️ by the younger generation for the farmers of the future.
+
+<!-- last-updated -->
+_Last updated: 2026-09-05_
+
